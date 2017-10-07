@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+from optparse import OptionParser
 from mnemonic.mnemonic import Mnemonic
 import sys
 from binascii import hexlify, unhexlify
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode, NETWORK_NAMES
+from pycoin.encoding import b2a_hashed_base58
 from getpass import getpass
 
 # ./toseed 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
@@ -13,15 +15,31 @@ from getpass import getpass
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
 
-doPrivate = True
-passphrase = sys.argv[2] if len(sys.argv) > 2 else getpass('Passphrase: ')
-seed = Mnemonic.to_seed(sys.argv[1], passphrase=passphrase)
-if doPrivate:
+coin_map = {"btc": (b'\0', "0'"), "zcash": (b'\x1c\xb8', "1893'")}
+coins = coin_map.keys()
+
+coin_list = ",".join(coins)
+
+parser = OptionParser()
+parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
+parser.add_option("-r", "--private", default=False, action="store_true", help="show private keys")
+parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
+parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
+
+(options, args) = parser.parse_args()
+
+passphrase = options.passphrase if options.passphrase else getpass('Passphrase: ')
+seed = Mnemonic.to_seed(args[0], passphrase=passphrase)
+(address_prefix, coin_derivation) = coin_map[options.coin]
+if options.private:
     print hexlify(seed)
 master = BIP32Node.from_master_secret(seed)
-for i in xrange(20):
-    subkey = master.subkeys("44'/0'/0'/0/%d"%(i)).next()
-    if doPrivate:
-        print "%s %s"%(subkey.address(), subkey.wif())
+for i in xrange(options.count):
+    subkey = master.subkeys("44'/%s/0'/0/%d"%(coin_derivation,i)).next()
+    hash160 = subkey.hash160()
+    private = subkey.wif()
+    address = b2a_hashed_base58(address_prefix + hash160)
+    if options.private:
+        print "%s %s"%(address, private)
     else:
-        print "%s"%(subkey.address())
+        print "%s"%(address)
