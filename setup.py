@@ -17,6 +17,7 @@ setup(
     url="https://github.com/devrandom/pymultiwallet",
     license="http://opensource.org/licenses/MIT",
     description="BIP-44 multi-coin wallet tool",
+    test_suite='tests',
     install_requires=[
         'pycoin',
         'mnemonic'

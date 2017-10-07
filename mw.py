@@ -17,7 +17,7 @@ from getpass import getpass
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
 
 def btc_to_address(prefix, subkey):
-    return b2a_hashed_base58(address_prefix + subkey.hash160())
+    return b2a_hashed_base58(prefix + subkey.hash160())
 
 def btc_to_private(exponent):
     return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
@@ -39,6 +39,19 @@ coins = coin_map.keys()
 
 coin_list = ",".join(coins)
 
+def mnemonic_to_master(mnemonic, passphrase):
+    seed = Mnemonic.to_seed(mnemonic, passphrase=passphrase)
+    master = BIP32Node.from_master_secret(seed)
+    return (seed, master)
+
+def compute_address(coin, master, i):
+    (address_prefix, coin_derivation, to_address, to_private) = coin_map[coin]
+    path = coin_derivation + "/%d"%(i,)
+    subkey = master.subkeys(path).next()
+    private = to_private(subkey.secret_exponent())
+    address = to_address(address_prefix, subkey)
+    return (address, private)
+
 def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
@@ -48,21 +61,16 @@ def main():
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
 
     (options, args) = parser.parse_args()
-    (address_prefix, coin_derivation, to_address, to_private) = coin_map[options.coin]
 
     passphrase = options.passphrase if options.passphrase is not None else getpass('Passphrase: ')
-    seed = Mnemonic.to_seed(args[0], passphrase=passphrase)
+    (seed, master) = mnemonic_to_master(args[0], passphrase)
+
     if options.show_seed:
         print(hexlify(seed))
         exit()
 
-    master = BIP32Node.from_master_secret(seed)
-
     for i in xrange(options.count):
-        path = coin_derivation + "/%d"%(i,)
-        subkey = master.subkeys(path).next()
-        private = to_private(subkey.secret_exponent())
-        address = to_address(address_prefix, subkey)
+        (address, private) = compute_address(options.coin, master, i)
         if options.private:
             print("%s %s"%(address, private))
         else:
