@@ -1,8 +1,9 @@
 language: python
-python:
-  - "2.7"
-  - "3.6"
-install:
-      - "pip install -e ."
+sudo: false
+python: 3.5
+install: "pip install pytest tox"
+env:
+    - TOX_ENV=py27
+    - TOX_ENV=py35
 script:
-      - "python setup.py test"
+    - tox -e $TOX_ENV
