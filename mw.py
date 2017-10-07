@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sha3
 from optparse import OptionParser
 from mnemonic.mnemonic import Mnemonic
 import sys
@@ -22,7 +23,9 @@ def btc_to_private(exponent):
     return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
 
 def eth_to_address(prefix, subkey):
-    return hexlify(subkey.sec(False))
+    hasher = sha3.keccak_256()
+    hasher.update(subkey.sec(True)[1:])
+    return hexlify(hasher.digest()[-20:])
 
 def eth_to_private(exponent):
     return hexlify(to_bytes_32(exponent))
@@ -40,6 +43,7 @@ def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
     parser.add_option("-r", "--private", default=False, action="store_true", help="show private keys")
+    parser.add_option("-s", "--show-seed", default=False, action="store_true", help="show master seed")
     parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
 
@@ -48,8 +52,9 @@ def main():
 
     passphrase = options.passphrase if options.passphrase is not None else getpass('Passphrase: ')
     seed = Mnemonic.to_seed(args[0], passphrase=passphrase)
-    if options.private:
-        print hexlify(seed)
+    if options.show_seed:
+        print(hexlify(seed))
+        exit()
 
     master = BIP32Node.from_master_secret(seed)
 
@@ -59,9 +64,9 @@ def main():
         private = to_private(subkey.secret_exponent())
         address = to_address(address_prefix, subkey)
         if options.private:
-            print "%s %s"%(address, private)
+            print("%s %s"%(address, private))
         else:
-            print "%s"%(address)
+            print("%s"%(address))
 
 if __name__ == "__main__":
     main()
