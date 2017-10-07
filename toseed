@@ -5,7 +5,7 @@ import sys
 from binascii import hexlify, unhexlify
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode, NETWORK_NAMES
-from pycoin.encoding import b2a_hashed_base58
+from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
 
 # ./toseed 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
@@ -15,7 +15,16 @@ from getpass import getpass
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
 
-coin_map = {"btc": (b'\0', "0'"), "zcash": (b'\x1c\xb8', "1893'")}
+def btc_to_address(prefix, hash160):
+    return b2a_hashed_base58(address_prefix + hash160)
+
+def btc_to_private(exponent):
+    return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
+
+coin_map = {
+        "btc": (b'\0', "0'", btc_to_address, btc_to_private),
+        "zcash": (b'\x1c\xb8', "1893'", btc_to_address, btc_to_private)
+        }
 coins = coin_map.keys()
 
 coin_list = ",".join(coins)
@@ -27,18 +36,20 @@ parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coi
 parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
 
 (options, args) = parser.parse_args()
+(address_prefix, coin_derivation, to_address, to_private) = coin_map[options.coin]
 
 passphrase = options.passphrase if options.passphrase else getpass('Passphrase: ')
 seed = Mnemonic.to_seed(args[0], passphrase=passphrase)
-(address_prefix, coin_derivation) = coin_map[options.coin]
 if options.private:
     print hexlify(seed)
+
 master = BIP32Node.from_master_secret(seed)
+
 for i in xrange(options.count):
     subkey = master.subkeys("44'/%s/0'/0/%d"%(coin_derivation,i)).next()
     hash160 = subkey.hash160()
-    private = subkey.wif()
-    address = b2a_hashed_base58(address_prefix + hash160)
+    private = to_private(subkey.secret_exponent())
+    address = to_address(address_prefix, hash160)
     if options.private:
         print "%s %s"%(address, private)
     else:
