@@ -35,7 +35,7 @@ coin_map = {
         "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
         "eth": (b'', "44'/60'/0'", eth_to_address, eth_to_private)
         }
-coins = coin_map.keys()
+coins = list(coin_map.keys())
 
 coin_list = ",".join(coins)
 
@@ -47,7 +47,7 @@ def mnemonic_to_master(mnemonic, passphrase):
 def compute_address(coin, master, i):
     (address_prefix, coin_derivation, to_address, to_private) = coin_map[coin]
     path = coin_derivation + "/%d"%(i,)
-    subkey = master.subkeys(path).next()
+    subkey = next(master.subkeys(path))
     private = to_private(subkey.secret_exponent())
     address = to_address(address_prefix, subkey)
     return (address, private)
@@ -69,7 +69,7 @@ def main():
         print(hexlify(seed))
         exit()
 
-    for i in xrange(options.count):
+    for i in range(options.count):
         (address, private) = compute_address(options.coin, master, i)
         if options.private:
             print("%s %s"%(address, private))
