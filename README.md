@@ -14,7 +14,8 @@ Currently supported coins:
 
 Features:
 
-- Additional passphrase
+- Credentials include mnemonic phrase and an optional additional passphrase
+- A single set of credentials generates wallets for different coins
 
 Usage
 ======
