@@ -9,7 +9,7 @@ from pycoin.networks import full_network_name_for_netcode, network_name_for_netc
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
 
-# ./toseed 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
+# mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
 # ku H:$SEED
 # > master xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF

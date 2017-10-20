@@ -6,11 +6,12 @@ setup(
     name="pymultiwallet",
     version="0.1.0",
     packages = [
+        'mw'
     ],
     author="Dev Random",
     entry_points = { 'console_scripts':
             [
-                'mw = mw:main',
+                'mw = mw.mw:main',
             ]
         },
     author_email="info@gitian.org",
@@ -21,7 +22,8 @@ setup(
     requires=[
         'pycoin',
         'mnemonic',
-        'pysha3'
+        'pysha3',
+        'pycrypto'
         ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
