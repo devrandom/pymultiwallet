@@ -1,5 +1,5 @@
 import unittest
-from mw.mw import mnemonic_to_master, compute_address
+from mw.mw import mnemonic_to_master, compute_address, generate
 from binascii import hexlify, unhexlify
 
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
@@ -30,6 +30,8 @@ class TestAll(unittest.TestCase):
         (a10, p10) = compute_address('zcash', master, 10)
         self.assertEqual(a10, 't1KgukGc7CdKgG87c6yD5E4UkB3rDEv3BXt')
         self.assertEqual(p10, 'KxyEPn1nUukhZFhBb69MSUYay4ojAe7SFGcW6doyqvEEuERQES2G')
+    def test_generate(self):
+        self.assertEqual(12, len(generate().split(" ")))
 
 if __name__ == '__main__':
     unittest.main()

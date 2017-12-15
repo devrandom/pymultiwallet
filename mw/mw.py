@@ -3,6 +3,7 @@ import sha3
 from optparse import OptionParser
 from mnemonic.mnemonic import Mnemonic
 import sys
+import os
 from binascii import hexlify, unhexlify
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode
@@ -52,6 +53,9 @@ def compute_address(coin, master, i):
     address = to_address(address_prefix, subkey)
     return (address, private)
 
+def generate():
+    return Mnemonic('english').generate()
+
 def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
@@ -59,8 +63,13 @@ def main():
     parser.add_option("-s", "--show-seed", default=False, action="store_true", help="show master seed")
     parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
+    parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
 
     (options, args) = parser.parse_args()
+
+    if (options.generate):
+        print(generate())
+        exit()
 
     passphrase = options.passphrase if options.passphrase is not None else getpass('Passphrase: ')
     (seed, master) = mnemonic_to_master(args[0], passphrase)
