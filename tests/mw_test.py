@@ -1,5 +1,5 @@
 import unittest
-from mw.mw import mnemonic_to_master, compute_address, generate
+from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy
 from binascii import hexlify, unhexlify
 
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
