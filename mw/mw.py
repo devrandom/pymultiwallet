@@ -4,6 +4,7 @@ from optparse import OptionParser
 from mnemonic.mnemonic import Mnemonic
 import sys
 import os
+import hashlib
 from binascii import hexlify, unhexlify
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode
@@ -53,8 +54,14 @@ def compute_address(coin, master, i):
     address = to_address(address_prefix, subkey)
     return (address, private)
 
-def generate():
-    return Mnemonic('english').generate()
+def generate(data=None):
+    if data is None:
+        data = os.urandom(16)
+    return Mnemonic('english').to_mnemonic(data)
+
+def hash_entropy(entropy_string):
+    ee = hashlib.sha256(entropy_string.encode('utf-8'))
+    return ee.digest()[0:16]
 
 def main():
     parser = OptionParser()
@@ -64,11 +71,20 @@ def main():
     parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
+    parser.add_option("-e", "--entropy", default=False, action="store_true", help="type some entropy")
 
     (options, args) = parser.parse_args()
 
+    entropy = None
+    if (options.entropy):
+        sys.stdout.write("Enter entropy string followed by a \\n. ")
+        sys.stdout.write("No entropy is added, make sure you provide enough.\n")
+        sys.stdout.write(": ")
+        entropy_string = raw_input()
+        entropy = hash_entropy(entropy_string)
+    
     if (options.generate):
-        print(generate())
+        print(generate(entropy))
         exit()
 
     passphrase = options.passphrase if options.passphrase is not None else getpass('Passphrase: ')

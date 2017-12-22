@@ -1,5 +1,5 @@
 import unittest
-from mw.mw import mnemonic_to_master, compute_address, generate
+from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy
 from binascii import hexlify, unhexlify
 
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
@@ -33,5 +33,8 @@ class TestAll(unittest.TestCase):
     def test_generate(self):
         self.assertEqual(12, len(generate().split(" ")))
 
+    def test_entropy(self):
+        self.assertEqual(u"coconut mystery hub satoshi any mandate option alter client column judge diamond", generate(hash_entropy("hello")))
+        
 if __name__ == '__main__':
     unittest.main()
