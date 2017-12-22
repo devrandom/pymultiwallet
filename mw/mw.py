@@ -60,7 +60,7 @@ def generate(data=None):
     return Mnemonic('english').to_mnemonic(data)
 
 def hash_entropy(entropy_string):
-    ee = hashlib.sha256(entropy_string)
+    ee = hashlib.sha256(entropy_string.encode('utf-8'))
     return ee.digest()[0:16]
 
 def main():
