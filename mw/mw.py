@@ -54,7 +54,9 @@ def compute_address(coin, master, i):
     address = to_address(address_prefix, subkey)
     return (address, private)
 
-def generate(data):
+def generate(data=None):
+    if data is None:
+        data = os.urandom(16)
     return Mnemonic('english').to_mnemonic(data)
 
 def main():
@@ -77,8 +79,6 @@ def main():
         entropy = ee.digest()[0:16]
     
     if (options.generate):
-        if entropy is None:
-            entropy = os.urandom(16)
         print(generate(entropy))
         exit()
 
