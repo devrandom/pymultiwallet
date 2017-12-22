@@ -59,6 +59,10 @@ def generate(data=None):
         data = os.urandom(16)
     return Mnemonic('english').to_mnemonic(data)
 
+def hash_entropy(entropy_string):
+    ee = hashlib.sha256(entropy_string)
+    return ee.digest()[0:16]
+
 def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
@@ -75,8 +79,7 @@ def main():
     if (options.entropy):
         print "enter entropy string followed by \\n:",
         entropy_string = raw_input()
-        ee = hashlib.sha256(entropy_string)
-        entropy = ee.digest()[0:16]
+        entropy = hash_entropy(entropy_string)
     
     if (options.generate):
         print(generate(entropy))
