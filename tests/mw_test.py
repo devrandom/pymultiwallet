@@ -34,7 +34,7 @@ class TestAll(unittest.TestCase):
         self.assertEqual(12, len(generate().split(" ")))
 
     def test_entropy(self):
-        self.assertEqual(["coconut", "mystery", "hub", "satoshi", "any", "mandate", "option", "alter", "client", "column", "judge", "diamond",], generate(hash_entropy("hello")))
+        self.assertEqual(u"coconut mystery hub satoshi any mandate option alter client column judge diamond", generate(hash_entropy("hello")))
         
 if __name__ == '__main__':
     unittest.main()
