@@ -19,6 +19,7 @@ import hashprint
 # > master xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
+VISUALIZATION_PATH = "9999'/9999'"
 
 def btc_to_address(prefix, subkey):
     return b2a_hashed_base58(prefix + subkey.hash160())
@@ -65,8 +66,9 @@ def hash_entropy(entropy_string):
     ee = hashlib.sha256(entropy_string.encode('utf-8'))
     return ee.digest()[0:16]
 
-def visual(seed):
-    return colorize(hashprint.pformat(list(bytearray(seed[0:32]))))
+def visual(master):
+    subkey = next(master.subkeys(VISUALIZATION_PATH))
+    return hashprint.pformat(list(bytearray(subkey.hash160())))
 
 def main():
     parser = OptionParser()
@@ -101,7 +103,11 @@ def main():
         exit()
 
     if not options.quiet:
-        print(visual(seed))
+        visualization = visual(master)
+        if sys.stdout.isatty():
+            print(colorize(visualization))
+        else:
+            print(visualization)
 
     for i in range(options.count):
         (address, private) = compute_address(options.coin, master, i)
