@@ -10,6 +10,7 @@ from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
+import hashprint
 
 # mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
@@ -63,6 +64,9 @@ def hash_entropy(entropy_string):
     ee = hashlib.sha256(entropy_string.encode('utf-8'))
     return ee.digest()[0:16]
 
+def print_visual(seed):
+    print(hashprint.pformat(list(bytearray(seed[0:32]))))
+
 def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
@@ -72,6 +76,7 @@ def main():
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
     parser.add_option("-e", "--entropy", default=False, action="store_true", help="type some entropy")
+    parser.add_option("-q", "--quiet", default=False, action="store_true", help="do not print visual seed")
 
     (options, args) = parser.parse_args()
 
@@ -93,6 +98,9 @@ def main():
     if options.show_seed:
         print(hexlify(seed))
         exit()
+
+    if not options.quiet:
+        print_visual(seed)
 
     for i in range(options.count):
         (address, private) = compute_address(options.coin, master, i)

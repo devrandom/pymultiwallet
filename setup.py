@@ -23,7 +23,8 @@ setup(
         'pycoin',
         'mnemonic',
         'pysha3',
-        'pycrypto'
+        'pycrypto',
+        'hashprint'
         ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
