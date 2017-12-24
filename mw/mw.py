@@ -10,6 +10,7 @@ from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
+from .colorize import colorize
 import hashprint
 
 # mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
@@ -64,8 +65,8 @@ def hash_entropy(entropy_string):
     ee = hashlib.sha256(entropy_string.encode('utf-8'))
     return ee.digest()[0:16]
 
-def print_visual(seed):
-    print(hashprint.pformat(list(bytearray(seed[0:32]))))
+def visual(seed):
+    return colorize(hashprint.pformat(list(bytearray(seed[0:32]))))
 
 def main():
     parser = OptionParser()
@@ -100,7 +101,7 @@ def main():
         exit()
 
     if not options.quiet:
-        print_visual(seed)
+        print(visual(seed))
 
     for i in range(options.count):
         (address, private) = compute_address(options.coin, master, i)

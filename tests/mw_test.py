@@ -1,5 +1,5 @@
 import unittest
-from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy
+from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy, visual
 from binascii import hexlify, unhexlify
 
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
@@ -13,6 +13,9 @@ class TestAll(unittest.TestCase):
         (a10, p10) = compute_address('eth', master, 10)
         self.assertEqual(a10, b'07384028cc968f0023324661599a234051ad99f9')
         self.assertEqual(p10, b'6d8e2c2a53f5e918565ca9cb000ecacaeb87bddbf60a8fbe450f1f576e5e1b4a')
+    def test_seed(self):
+        (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
+        visual(seed)
     def test_btc(self):
         (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
         self.assertEquals(hexlify(seed), b'c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04')
