@@ -30,15 +30,16 @@ def btc_to_private(exponent):
 def eth_to_address(prefix, subkey):
     hasher = sha3.keccak_256()
     hasher.update(subkey.sec(True)[1:])
-    return hexlify(hasher.digest()[-20:])
+    return hexlify(hasher.digest()[-20:]).decode()
 
 def eth_to_private(exponent):
-    return hexlify(to_bytes_32(exponent))
+    return hexlify(to_bytes_32(exponent)).decode()
 
 coin_map = {
         "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
         "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
-        "eth": (b'', "44'/60'/0'", eth_to_address, eth_to_private)
+        "eth": (b'', "44'/60'/0'", eth_to_address, eth_to_private),
+        "rop": (b'', "44'/1'/0'", eth_to_address, eth_to_private)
         }
 coins = list(coin_map.keys())
 
