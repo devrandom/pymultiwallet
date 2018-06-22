@@ -38,8 +38,8 @@ def eth_to_private(exponent):
 coin_map = {
         "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
         "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
-        "eth": (b'', "44'/60'/0'", eth_to_address, eth_to_private),
-        "rop": (b'', "44'/1'/0'", eth_to_address, eth_to_private)
+        "eth": (b'', "44'/60'/0'/0", eth_to_address, eth_to_private),
+        "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private)
         }
 coins = list(coin_map.keys())
 
