@@ -84,6 +84,10 @@ def main():
 
     (options, args) = parser.parse_args()
 
+    if len(args) > 1:
+        sys.stderr.write('too many arguments - did you quote the phrase?\n')
+        sys.exit(1)
+
     entropy = None
     if (options.entropy):
         sys.stdout.write("Enter entropy string followed by a \\n. ")
