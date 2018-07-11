@@ -5,6 +5,11 @@ from binascii import hexlify, unhexlify
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
 mnemonic2 = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 class TestAll(unittest.TestCase):
+    def test_ripple(self):
+        (seed, master) = mnemonic_to_master(mnemonic1, '')
+        (a0, p0) = compute_address('xrp', master, 0)
+        self.assertEqual(a0, 'r4keqeEf57QZnLeiKr5f4twBoH5Mr9S824')
+        self.assertEqual(p0, 'f730f2c7a79fabe94465b2d86f6c7f108d56810d89965f99c6bf193cfc7b0730')
     def test_eth(self):
         (seed, master) = mnemonic_to_master(mnemonic1, '')
         (a0, p0) = compute_address('eth', master, 0)

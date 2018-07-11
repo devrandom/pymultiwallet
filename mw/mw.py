@@ -11,6 +11,7 @@ from pycoin.networks import full_network_name_for_netcode, network_name_for_netc
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
 from .colorize import colorize
+from .ripple import RippleBaseDecoder
 import hashprint
 
 # mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
@@ -20,6 +21,8 @@ import hashprint
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
 VISUALIZATION_PATH = "9999'/9999'"
+
+ripple_decoder = RippleBaseDecoder()
 
 def btc_to_address(prefix, subkey):
     return b2a_hashed_base58(prefix + subkey.hash160())
@@ -35,11 +38,18 @@ def eth_to_address(prefix, subkey):
 def eth_to_private(exponent):
     return hexlify(to_bytes_32(exponent)).decode()
 
+def xrp_to_address(prefix, subkey):
+    return ripple_decoder.encode(subkey.hash160())
+
+def xrp_to_private(exponent):
+    return hexlify(to_bytes_32(exponent)).decode()
+
 coin_map = {
         "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
         "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
         "eth": (b'', "44'/60'/0'/0", eth_to_address, eth_to_private),
-        "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private)
+        "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private),
+        "xrp": (b'', "44'/144'/0'/0", xrp_to_address, xrp_to_private),
         }
 coins = list(coin_map.keys())
 
