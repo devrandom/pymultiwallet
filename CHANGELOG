@@ -1,0 +1,4 @@
+2018-Jun-21
+
+* Incompatible change - Ethereum derivation path now has same number
+of elements as other coins

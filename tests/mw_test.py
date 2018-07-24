@@ -1,18 +1,26 @@
 import unittest
-from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy
+from mw.mw import mnemonic_to_master, compute_address, generate, hash_entropy, visual
 from binascii import hexlify, unhexlify
 
 mnemonic1 = 'license diagram pelican spy monitor convince damage script wall hockey goose month popular swamp sugar rose mystery gap regular acquire bottom sea modify eyebrow'
 mnemonic2 = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 class TestAll(unittest.TestCase):
+    def test_ripple(self):
+        (seed, master) = mnemonic_to_master(mnemonic1, '')
+        (a0, p0) = compute_address('xrp', master, 0)
+        self.assertEqual(a0, 'r4keqeEf57QZnLeiKr5f4twBoH5Mr9S824')
+        self.assertEqual(p0, 'f730f2c7a79fabe94465b2d86f6c7f108d56810d89965f99c6bf193cfc7b0730')
     def test_eth(self):
         (seed, master) = mnemonic_to_master(mnemonic1, '')
         (a0, p0) = compute_address('eth', master, 0)
-        self.assertEqual(a0, b'98cf7199f4e0c977196aafa64c6a240febb7b73e')
-        self.assertEqual(p0, b'adc79901d8f7c56ff3ce1ea64ef09b17dcc9c246d5ca4e8cae5aace46471e8ee')
+        self.assertEqual(a0, '363aa60f6f5b5fc97e6874c6419c5421762dabf8')
+        self.assertEqual(p0, '6177745c12c1483cf83bca94e10a0fee4ee5d58a2c0f09b2162a5c3f8a07a27c')
         (a10, p10) = compute_address('eth', master, 10)
-        self.assertEqual(a10, b'07384028cc968f0023324661599a234051ad99f9')
-        self.assertEqual(p10, b'6d8e2c2a53f5e918565ca9cb000ecacaeb87bddbf60a8fbe450f1f576e5e1b4a')
+        self.assertEqual(a10, 'a6c572a1e51b377fd610861da4b64e6df987bea6')
+        self.assertEqual(p10, 'de77e2f9b063355d6e1b98af2717a21020cca03bb3749d86155ded10f2abd775')
+    def test_seed(self):
+        (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
+        self.assertEquals(visual(master), '+-----------------+\n|                 |\n|                 |\n|                 |\n|                 |\n|       .S       =|\n|*.    o=*=     +B|\n|@*     o.*+     .|\n|.      .*+.      |\n|o ...        .E  |\n+-----------------+')
     def test_btc(self):
         (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
         self.assertEquals(hexlify(seed), b'c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04')

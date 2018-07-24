@@ -10,6 +10,9 @@ from pycoin.key.BIP32Node import BIP32Node
 from pycoin.networks import full_network_name_for_netcode, network_name_for_netcode
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from getpass import getpass
+from .colorize import colorize
+from .ripple import RippleBaseDecoder
+import hashprint
 
 # mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
@@ -17,6 +20,9 @@ from getpass import getpass
 # > master xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
+VISUALIZATION_PATH = "9999'/9999'"
+
+ripple_decoder = RippleBaseDecoder()
 
 def btc_to_address(prefix, subkey):
     return b2a_hashed_base58(prefix + subkey.hash160())
@@ -27,15 +33,23 @@ def btc_to_private(exponent):
 def eth_to_address(prefix, subkey):
     hasher = sha3.keccak_256()
     hasher.update(subkey.sec(True)[1:])
-    return hexlify(hasher.digest()[-20:])
+    return hexlify(hasher.digest()[-20:]).decode()
 
 def eth_to_private(exponent):
-    return hexlify(to_bytes_32(exponent))
+    return hexlify(to_bytes_32(exponent)).decode()
+
+def xrp_to_address(prefix, subkey):
+    return ripple_decoder.encode(subkey.hash160())
+
+def xrp_to_private(exponent):
+    return hexlify(to_bytes_32(exponent)).decode()
 
 coin_map = {
         "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
         "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
-        "eth": (b'', "44'/60'/0'", eth_to_address, eth_to_private)
+        "eth": (b'', "44'/60'/0'/0", eth_to_address, eth_to_private),
+        "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private),
+        "xrp": (b'', "44'/144'/0'/0", xrp_to_address, xrp_to_private),
         }
 coins = list(coin_map.keys())
 
@@ -63,6 +77,10 @@ def hash_entropy(entropy_string):
     ee = hashlib.sha256(entropy_string.encode('utf-8'))
     return ee.digest()[0:16]
 
+def visual(master):
+    subkey = next(master.subkeys(VISUALIZATION_PATH))
+    return hashprint.pformat(list(bytearray(subkey.hash160())))
+
 def main():
     parser = OptionParser()
     parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
@@ -72,8 +90,13 @@ def main():
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
     parser.add_option("-e", "--entropy", default=False, action="store_true", help="type some entropy")
+    parser.add_option("-q", "--quiet", default=False, action="store_true", help="do not print visual seed")
 
     (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        sys.stderr.write('too many arguments - did you quote the phrase?\n')
+        sys.exit(1)
 
     entropy = None
     if (options.entropy):
@@ -93,6 +116,13 @@ def main():
     if options.show_seed:
         print(hexlify(seed))
         exit()
+
+    if not options.quiet:
+        visualization = visual(master)
+        if sys.stdout.isatty():
+            print(colorize(visualization))
+        else:
+            print(visualization)
 
     for i in range(options.count):
         (address, private) = compute_address(options.coin, master, i)
