@@ -50,6 +50,7 @@ coin_map = {
         "eth": (b'', "44'/60'/0'/0", eth_to_address, eth_to_private),
         "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private),
         "xrp": (b'', "44'/144'/0'/0", xrp_to_address, xrp_to_private),
+        "txrp": (b'', "44'/1'/0'/0", xrp_to_address, xrp_to_private),
         }
 coins = list(coin_map.keys())
 
