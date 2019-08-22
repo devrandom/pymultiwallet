@@ -31,11 +31,11 @@ class TestAll(unittest.TestCase):
 
     def test_seed(self):
         (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
-        self.assertEquals(visual(master), '+-----------------+\n|                 |\n|                 |\n|                 |\n|                 |\n|       .S       =|\n|*.    o=*=     +B|\n|@*     o.*+     .|\n|.      .*+.      |\n|o ...        .E  |\n+-----------------+')
+        self.assertEqual(visual(master), '+-----------------+\n|                 |\n|                 |\n|                 |\n|                 |\n|       .S       =|\n|*.    o=*=     +B|\n|@*     o.*+     .|\n|.      .*+.      |\n|o ...        .E  |\n+-----------------+')
 
     def test_btc(self):
         (seed, master) = mnemonic_to_master(mnemonic2, 'TREZOR')
-        self.assertEquals(hexlify(seed), b'c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04')
+        self.assertEqual(hexlify(seed), b'c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04')
         (a0, p0) = compute_address('btc', master, 0)
         self.assertEqual(a0, '1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y')
         self.assertEqual(p0, 'L47qcNDdda3QMACwfisBm5XHrXvzTLd9H9Cxz3LBH2J8EBPFvMGo')

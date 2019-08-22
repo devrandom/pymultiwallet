@@ -9,7 +9,6 @@ from optparse import OptionParser
 import hashprint
 import sha3
 from mnemonic.mnemonic import Mnemonic
-from past.builtins import raw_input
 from pycoin.contrib.segwit_addr import bech32_encode, convertbits
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from pycoin.key.BIP32Node import BIP32Node
