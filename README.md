@@ -11,6 +11,8 @@ Currently supported coins:
 - Bitcoin
 - Zcash
 - Ethereum
+- Cosmos
+- Ripple
 
 Features:
 
