@@ -129,7 +129,7 @@ def main():
         sys.stdout.write("Enter entropy string followed by a \\n. ")
         sys.stdout.write("No entropy is added, make sure you provide enough.\n")
         sys.stdout.write(": ")
-        entropy_string = raw_input()
+        entropy_string = input()
         entropy = hash_entropy(entropy_string)
     
     if options.generate:

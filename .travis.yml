@@ -1,9 +1,8 @@
 language: python
 sudo: false
-python: 3.5
+python: 3.6
 install: "pip install pytest tox"
 env:
-    - TOX_ENV=py27
-    - TOX_ENV=py35
+    - TOX_ENV=py36
 script:
     - tox -e $TOX_ENV
