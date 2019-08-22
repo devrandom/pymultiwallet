@@ -10,6 +10,7 @@ import hashprint
 import sha3
 from mnemonic.mnemonic import Mnemonic
 from past.builtins import raw_input
+from pycoin.contrib.segwit_addr import bech32_encode, convertbits
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from pycoin.key.BIP32Node import BIP32Node
 
@@ -53,6 +54,14 @@ def xrp_to_private(exponent):
     return hexlify(to_bytes_32(exponent)).decode()
 
 
+def cosmos_to_address(prefix, subkey):
+    return bech32_encode(prefix.decode(), convertbits(subkey.hash160(), 8, 5))
+
+
+def cosmos_to_private(exponent):
+    return hexlify(to_bytes_32(exponent)).decode()
+
+
 coin_map = {
     "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
     "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
@@ -60,6 +69,7 @@ coin_map = {
     "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private),
     "xrp": (b'', "44'/144'/0'/0", xrp_to_address, xrp_to_private),
     "txrp": (b'', "44'/1'/0'/0", xrp_to_address, xrp_to_private),
+    "cosmos": (b'cosmos', "44'/118'/0'/0", cosmos_to_address, cosmos_to_private),
 }
 
 coins = list(coin_map.keys())

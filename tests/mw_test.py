@@ -8,6 +8,12 @@ mnemonic2 = 'abandon abandon abandon abandon abandon abandon abandon abandon aba
 
 
 class TestAll(unittest.TestCase):
+    def test_cosmos(self):
+        (seed, master) = mnemonic_to_master(mnemonic2, '')
+        (a0, p0) = compute_address('cosmos', master, 0)
+        self.assertEqual(a0, 'cosmos19rl4cm2hmr8afy4kldpxz3fka4jguq0auqdal4')
+        self.assertEqual(p0, 'c4a48e2fce1481cd3294b4490f6678090ea98d3d0e5cd984558ab0968741b104')
+
     def test_ripple(self):
         (seed, master) = mnemonic_to_master(mnemonic1, '')
         (a0, p0) = compute_address('xrp', master, 0)
