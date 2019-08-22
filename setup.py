@@ -19,12 +19,12 @@ setup(
     license="http://opensource.org/licenses/MIT",
     description="BIP-44 multi-coin wallet tool",
     test_suite='tests',
-    requires=[
-        'pycoin',
-        'mnemonic',
-        'pysha3',
-        'pycrypto',
-        'hashprint'
+    install_requires=[
+        'pycoin==0.80',
+        'mnemonic==0.18',
+        'pysha3==1.0.2',
+        'pycrypto==2.6.1',
+        'hashprint==1.0.1',
         ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
