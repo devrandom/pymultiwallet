@@ -12,7 +12,6 @@ from pycoin.contrib.segwit_addr import bech32_encode, convertbits
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from pycoin.key.BIP32Node import BIP32Node
 
-from .colorize import colorize
 from .ripple import RippleBaseDecoder
 
 # mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
@@ -146,6 +145,7 @@ def main():
     if not options.quiet:
         visualization = visual(master)
         if sys.stdout.isatty():
+            from .colorize import colorize
             print(colorize(visualization))
         else:
             print(visualization)
