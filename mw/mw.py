@@ -6,7 +6,6 @@ from binascii import hexlify
 from getpass import getpass
 from optparse import OptionParser
 
-import hashprint
 import sha3
 from mnemonic.mnemonic import Mnemonic
 from pycoin.contrib.segwit_addr import bech32_encode, convertbits
@@ -103,6 +102,7 @@ def hash_entropy(entropy_string):
 
 
 def visual(master):
+    import hashprint
     subkey = next(master.subkeys(VISUALIZATION_PATH))
     return hashprint.pformat(list(bytearray(subkey.hash160())))
 
