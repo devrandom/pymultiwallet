@@ -2,7 +2,9 @@
 import hashlib
 import os
 import sys
+from abc import ABC, abstractmethod
 from binascii import hexlify
+from collections import namedtuple
 from getpass import getpass
 from optparse import OptionParser
 
@@ -25,48 +27,72 @@ VISUALIZATION_PATH = "9999'/9999'"
 ripple_decoder = RippleBaseDecoder()
 
 
-def btc_to_address(prefix, subkey):
-    return b2a_hashed_base58(prefix + subkey.hash160())
+BaseCoin = namedtuple('Coin', ['address_prefix', 'coin_derivation', 'deposit_path', 'change_path'])
 
 
-def btc_to_private(exponent):
-    return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
+class Coin(BaseCoin, ABC):
+    @abstractmethod
+    def to_address(self, subkey):
+        pass
+
+    @abstractmethod
+    def to_private(self, exponent):
+        pass
+
+    def address(self, master, i, change=False):
+        extra_path = self.change_path if change else self.deposit_path
+        path = self.coin_derivation + "%s/%d" % (extra_path, i)
+        subkey = next(master.subkeys(path))
+        private = self.to_private(subkey.secret_exponent())
+        address = self.to_address(subkey)
+        return address, private
+
+    def has_change_chain(self):
+        return self.change_path is not None
 
 
-def eth_to_address(prefix, subkey):
-    hasher = sha3.keccak_256()
-    hasher.update(subkey.sec(True)[1:])
-    return hexlify(hasher.digest()[-20:]).decode()
+class BTCCoin(Coin):
+    def to_address(self, subkey):
+        return b2a_hashed_base58(self.address_prefix + subkey.hash160())
+
+    def to_private(self, exponent):
+        return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
 
 
-def eth_to_private(exponent):
-    return hexlify(to_bytes_32(exponent)).decode()
+class ETHCoin(Coin):
+    def to_address(self, subkey):
+        hasher = sha3.keccak_256()
+        hasher.update(subkey.sec(True)[1:])
+        return hexlify(hasher.digest()[-20:]).decode()
+
+    def to_private(self, exponent):
+        return hexlify(to_bytes_32(exponent)).decode()
 
 
-def xrp_to_address(prefix, subkey):
-    return ripple_decoder.encode(subkey.hash160())
+class XRPCoin(Coin):
+    def to_address(self, subkey):
+        return ripple_decoder.encode(subkey.hash160())
+
+    def to_private(self, exponent):
+        return hexlify(to_bytes_32(exponent)).decode()
 
 
-def xrp_to_private(exponent):
-    return hexlify(to_bytes_32(exponent)).decode()
+class CosmosCoin(Coin):
+    def to_address(self, subkey):
+        return bech32_encode(self.address_prefix.decode(), convertbits(subkey.hash160(), 8, 5))
 
-
-def cosmos_to_address(prefix, subkey):
-    return bech32_encode(prefix.decode(), convertbits(subkey.hash160(), 8, 5))
-
-
-def cosmos_to_private(exponent):
-    return hexlify(to_bytes_32(exponent)).decode()
+    def to_private(self, exponent):
+        return hexlify(to_bytes_32(exponent)).decode()
 
 
 coin_map = {
-    "btc": (b'\0', "44'/0'/0'/0", btc_to_address, btc_to_private),
-    "zcash": (b'\x1c\xb8', "44'/1893'/0'/0", btc_to_address, btc_to_private),
-    "eth": (b'', "44'/60'/0'/0", eth_to_address, eth_to_private),
-    "rop": (b'', "44'/1'/0'/0", eth_to_address, eth_to_private),
-    "xrp": (b'', "44'/144'/0'/0", xrp_to_address, xrp_to_private),
-    "txrp": (b'', "44'/1'/0'/0", xrp_to_address, xrp_to_private),
-    "cosmos": (b'cosmos', "44'/118'/0'/0", cosmos_to_address, cosmos_to_private),
+    "btc": BTCCoin(b'\0', "44'/0'/0'", "/0", "/1"),
+    "zcash": BTCCoin(b'\x1c\xb8', "44'/1893'/0'", "/0", "/1"),
+    "eth": ETHCoin(b'', "44'/60'/0'", "/0", None),
+    "rop": ETHCoin(b'', "44'/1'/0'", "/0", None),
+    "xrp": XRPCoin(b'', "44'/144'/0'", "/0", None),
+    "txrp": XRPCoin(b'', "44'/1'/0'", "/0", None),
+    "cosmos": CosmosCoin(b'cosmos', "44'/118'/0'", "/0", None),
 }
 
 coins = list(coin_map.keys())
@@ -78,15 +104,6 @@ def mnemonic_to_master(mnemonic, passphrase):
     seed = Mnemonic.to_seed(mnemonic, passphrase=passphrase)
     master = BIP32Node.from_master_secret(seed)
     return seed, master
-
-
-def compute_address(coin, master, i):
-    (address_prefix, coin_derivation, to_address, to_private) = coin_map[coin]
-    path = coin_derivation + "/%d"%(i,)
-    subkey = next(master.subkeys(path))
-    private = to_private(subkey.secret_exponent())
-    address = to_address(address_prefix, subkey)
-    return address, private
 
 
 def generate(data=None):
@@ -150,8 +167,10 @@ def main():
         else:
             print(visualization)
 
+    coin = coin_map[options.coin]
+
     for i in range(options.count):
-        (address, private) = compute_address(options.coin, master, i)
+        (address, private) = coin.address(master, i)
         if options.private:
             print("%s %s" % (address, private))
         else:

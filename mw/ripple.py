@@ -1,6 +1,6 @@
 from hashlib import sha256
 from binascii import hexlify
-import six
+
 
 class RippleBaseDecoder(object):
     """Decodes Ripple's base58 alphabet.
@@ -69,7 +69,7 @@ class RippleBaseDecoder(object):
         res = ''.join(res[::-1])
 
         # Encode leading zeros as base58 zeros
-        czero = 0 if six.PY3 else b'\x00'
+        czero = 0
         pad = 0
         for c in data:
             if c == czero:
