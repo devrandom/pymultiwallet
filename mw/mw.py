@@ -4,7 +4,6 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from binascii import hexlify
-from collections import namedtuple
 from getpass import getpass
 from optparse import OptionParser
 
@@ -16,7 +15,7 @@ from pycoin.key.BIP32Node import BIP32Node
 
 from .ripple import RippleBaseDecoder
 
-# mw 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about' TREZOR
+# mw -p TREZOR 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
 # ku H:$SEED
 # > master xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF
@@ -27,40 +26,88 @@ VISUALIZATION_PATH = "9999'/9999'"
 ripple_decoder = RippleBaseDecoder()
 
 
-BaseCoin = namedtuple('Coin', ['address_prefix', 'coin_derivation', 'deposit_path', 'change_path'])
+class Coin(ABC):
+    def __init__(self, address_prefix, coin_derivation, deposit_path, change_path):
+        self.address_prefix = address_prefix
+        self.coin_derivation = coin_derivation
+        self.deposit_path = deposit_path
+        self.change_path = change_path
 
-
-class Coin(BaseCoin, ABC):
     @abstractmethod
-    def to_address(self, subkey):
+    def to_address(self, subkey, purpose):
         pass
 
     @abstractmethod
     def to_private(self, exponent):
         pass
 
-    def address(self, master, i, change=False):
+    def path(self, i, change, purpose):
         extra_path = self.change_path if change else self.deposit_path
-        path = self.coin_derivation + "%s/%d" % (extra_path, i)
+        return self.base_derivation(purpose) + "%s/%d" % (extra_path, i)
+
+    def address(self, master, i, change=False, purpose=None):
+        path = self.path(i, change, purpose)
         subkey = next(master.subkeys(path))
         private = self.to_private(subkey.secret_exponent())
-        address = self.to_address(subkey)
+        address = self.to_address(subkey, purpose)
         return address, private
 
     def has_change_chain(self):
         return self.change_path is not None
 
+    def can_generate_addresses(self, purpose):
+        return True
+
+    def xpub(self, master, purpose):
+        raise NotImplementedError()
+
+    def base_derivation(self, purpose):
+        return self.coin_derivation
+
 
 class BTCCoin(Coin):
-    def to_address(self, subkey):
-        return b2a_hashed_base58(self.address_prefix + subkey.hash160())
+    def __init__(self, *args, bech_prefix):
+        super().__init__(*args)
+        self.bech_prefix = bech_prefix
+
+    def can_generate_addresses(self, purpose):
+        if purpose == 'p2wsh':
+            return False
+        return True
+
+    def path(self, i, change, purpose):
+        base_derivation = self.base_derivation(purpose)
+        extra_path = self.change_path if change else self.deposit_path
+        return base_derivation + "%s/%d" % (extra_path, i)
+
+    def base_derivation(self, purpose):
+        if purpose is None or purpose == 'p2pkh':
+            purpose_path = "44"
+        elif purpose == 'p2wpkh' or purpose == 'p2wsh':
+            purpose_path = "84"
+        else:
+            raise RuntimeError('invalid purpose ' + purpose)
+        return self.coin_derivation % purpose_path
+
+    def to_address(self, subkey, purpose):
+        if purpose == 'p2wpkh':
+            return bech32_encode(self.bech_prefix, [0] + convertbits(subkey.hash160(), 8, 5))
+        elif purpose == 'p2wsh':
+            raise RuntimeError('no addresses can be generated for p2wsh')
+        else:
+            return b2a_hashed_base58(self.address_prefix + subkey.hash160())
 
     def to_private(self, exponent):
         return b2a_hashed_base58(b'\x80' + to_bytes_32(exponent) + b'\01')
 
+    def xpub(self, master, purpose):
+        base_derivation = self.base_derivation(purpose)
+        subkey = next(master.subkeys(base_derivation))
+        return subkey.as_text()
+
 
 class ETHCoin(Coin):
-    def to_address(self, subkey):
+    def to_address(self, subkey, _purpose):
         hasher = sha3.keccak_256()
         hasher.update(subkey.sec(True)[1:])
         return hexlify(hasher.digest()[-20:]).decode()
@@ -70,7 +117,7 @@ class ETHCoin(Coin):
 
 
 class XRPCoin(Coin):
-    def to_address(self, subkey):
+    def to_address(self, subkey, _purpose):
         return ripple_decoder.encode(subkey.hash160())
 
     def to_private(self, exponent):
@@ -78,7 +125,7 @@ class XRPCoin(Coin):
 
 
 class CosmosCoin(Coin):
-    def to_address(self, subkey):
+    def to_address(self, subkey, _purpose):
         return bech32_encode(self.address_prefix.decode(), convertbits(subkey.hash160(), 8, 5))
 
     def to_private(self, exponent):
@@ -86,8 +133,8 @@ class CosmosCoin(Coin):
 
 
 coin_map = {
-    "btc": BTCCoin(b'\0', "44'/0'/0'", "/0", "/1"),
-    "zcash": BTCCoin(b'\x1c\xb8', "44'/1893'/0'", "/0", "/1"),
+    "btc": BTCCoin(b'\0', "%s'/0'/0'", "/0", "/1", bech_prefix='bc'),
+    "zcash": BTCCoin(b'\x1c\xb8', "%s'/1893'/0'", "/0", "/1", bech_prefix=None),
     "eth": ETHCoin(b'', "44'/60'/0'", "/0", None),
     "rop": ETHCoin(b'', "44'/1'/0'", "/0", None),
     "xrp": XRPCoin(b'', "44'/144'/0'", "/0", None),
@@ -97,7 +144,11 @@ coin_map = {
 
 coins = list(coin_map.keys())
 
-coin_list = ",".join(coins)
+coin_list = ', '.join(coins)
+
+purposes = ['p2pkh', 'p2wpkh', 'p2wsh']
+
+purpose_list = ', '.join(purposes)
 
 
 def mnemonic_to_master(mnemonic, passphrase):
@@ -133,6 +184,9 @@ def main():
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
     parser.add_option("-e", "--entropy", default=False, action="store_true", help="type some entropy")
     parser.add_option("-q", "--quiet", default=False, action="store_true", help="do not print visual seed")
+    parser.add_option("-u", "--purpose", default=None, help="one of: " + purpose_list, choices=purposes)
+    parser.add_option("-a", "--change", default=False, action="store_true", help="show change addresses")
+    parser.add_option("-x", "--show-xpub", default=False, action="store_true", help="show xpub")
 
     (options, args) = parser.parse_args()
 
@@ -169,12 +223,21 @@ def main():
 
     coin = coin_map[options.coin]
 
-    for i in range(options.count):
-        (address, private) = coin.address(master, i)
-        if options.private:
-            print("%s %s" % (address, private))
-        else:
-            print("%s" % (address,))
+    print("base derivation path: %s" % coin.base_derivation(options.purpose))
+
+    if options.show_xpub:
+        print("xpub: %s" % coin.xpub(master, options.purpose))
+
+    if coin.can_generate_addresses(options.purpose):
+        for i in range(options.count):
+            (address, private) = coin.address(master, i, change=options.change, purpose=options.purpose)
+            if options.private:
+                print("%s %s" % (address, private))
+            else:
+                print("%s" % (address,))
+    else:
+        if not options.show_xpub:
+            print("no addresses can be shown for %s, try --show-xpub" % options.purpose)
 
 
 if __name__ == "__main__":

@@ -77,9 +77,22 @@ class TestAll(unittest.TestCase):
         self.assertEqual(u"coconut mystery hub satoshi any mandate option alter client column judge diamond",
                          generate(hash_entropy("hello")))
 
+    def test_btc_bech32(self):
+        (_, master) = mnemonic_to_master(mnemonic2, '')
+        coin = coin_map['btc']
+        (a0, _) = coin.address(master, 0, purpose='p2wpkh')
+        self.assertEqual(a0, 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu')
+
     def test_btc_xpub(self):
         (seed, master) = mnemonic_to_master(mnemonic2, '')
         self.assertEqual(hexlify(seed), b'5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4')
+        coin = coin_map['btc']
+        xpub = coin.xpub(master, None)
+        self.assertEqual(xpub, 'xpub6BosfCnifzxcFwrSzQiqu2DBVTshkCXacvNsWGYJVVhhawA7d4R5WSWGFNbi8Aw6ZRc1brxMyWMzG3DSSSSoekkudhUd9yLb6qx39T9nMdj')
+
+        # this one is from https://bip39calculator.com/ + conversion from https://jlopp.github.io/xpub-converter/
+        xpub = coin.xpub(master, 'p2wsh')
+        self.assertEqual(xpub, 'xpub6CatWdiZiodmUeTDp8LT5or8nmbKNcuyvz7WyksVFkKB4RHwCD3XyuvPEbvqAQY3rAPshWcMLoP2fMFMKHPJ4ZeZXYVUhLv1VMrjPC7PW6V')
 
 
 if __name__ == '__main__':
