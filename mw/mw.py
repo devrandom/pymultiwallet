@@ -152,9 +152,9 @@ purposes = ['p2pkh', 'p2wpkh', 'p2wsh']
 purpose_list = ', '.join(purposes)
 
 
-def mnemonic_to_master(mnemonic, passphrase):
+def mnemonic_to_master(mnemonic, passphrase, netcode='BTC'):
     seed = Mnemonic.to_seed(mnemonic, passphrase=passphrase)
-    master = BIP32Node.from_master_secret(seed)
+    master = BIP32Node.from_master_secret(seed, netcode)
     return seed, master
 
 
@@ -211,7 +211,13 @@ def main():
         exit()
 
     passphrase = options.passphrase if options.passphrase is not None else getpass('Passphrase: ')
-    (seed, master) = mnemonic_to_master(args[0], passphrase)
+
+    # TODO this should be in the coin map, not here
+    netcode = 'BTC'
+    if options.coin == 'tbtc':
+        netcode = 'XTN'
+
+    (seed, master) = mnemonic_to_master(args[0], passphrase, netcode)
 
     if options.show_seed:
         print(hexlify(seed))
