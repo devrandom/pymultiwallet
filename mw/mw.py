@@ -176,10 +176,14 @@ def visual(master):
 
 
 def main():
-    parser = OptionParser()
-    parser.add_option("-p", "--passphrase", help="use PASSPHRASE, or prompt if not provided", metavar="PASSPHRASE")
-    parser.add_option("-r", "--private", default=False, action="store_true", help="show private keys")
+    parser = OptionParser(usage="""Usage: %prog [options] [MNEMONIC_PHRASE]
+    Note that the mnemonic phrase is required if --generate is not supplied. 
+    """)
+    parser.add_option("-p", "--passphrase", help="use an additional wallet passphrase, will prompt if not provided."
+                                                 " Pass an empty string to not have a passphrase.", metavar="PASSPHRASE")
+    parser.add_option("-r", "--show-private", default=False, action="store_true", help="show private keys")
     parser.add_option("-s", "--show-seed", default=False, action="store_true", help="show master seed")
+    parser.add_option("-x", "--show-xpub", default=False, action="store_true", help="show xpub")
     parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
@@ -187,12 +191,11 @@ def main():
     parser.add_option("-q", "--quiet", default=False, action="store_true", help="do not print visual seed")
     parser.add_option("-u", "--purpose", default=None, help="one of: " + purpose_list, choices=purposes)
     parser.add_option("-a", "--change", default=False, action="store_true", help="show change addresses")
-    parser.add_option("-x", "--show-xpub", default=False, action="store_true", help="show xpub")
 
     (options, args) = parser.parse_args()
 
     if len(args) > 1:
-        sys.stderr.write('too many arguments - did you quote the phrase?\n')
+        sys.stderr.write('too many arguments - did you quote the mnemonic phrase?\n')
         sys.exit(1)
 
     entropy = None
@@ -232,7 +235,7 @@ def main():
     if coin.can_generate_addresses(options.purpose):
         for i in range(options.count):
             (address, private) = coin.address(master, i, change=options.change, purpose=options.purpose)
-            if options.private:
+            if options.show_private:
                 print("%s %s" % (address, private))
             else:
                 print("%s" % (address,))
