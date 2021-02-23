@@ -26,7 +26,7 @@ Usage
 pip install -e .
 mnemonic='abandon abandon abandon abandon abandon\
  abandon abandon abandon abandon abandon abandon about'
-mw -p TREZOR -r -c zcash $mnemonic
+mw -p TREZOR -r -c zcash "$mnemonic"
 ```
 
 results in:
