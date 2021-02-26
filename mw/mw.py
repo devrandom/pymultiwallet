@@ -13,8 +13,6 @@ from pycoin.contrib.segwit_addr import bech32_encode, convertbits
 from pycoin.encoding import b2a_hashed_base58, to_bytes_32
 from pycoin.key.BIP32Node import BIP32Node
 
-from .ripple import RippleBaseDecoder
-
 # mw -p TREZOR 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
 # ku H:$SEED
@@ -23,7 +21,6 @@ from .ripple import RippleBaseDecoder
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
 VISUALIZATION_PATH = "9999'/9999'"
 
-ripple_decoder = RippleBaseDecoder()
 
 
 class Coin(ABC):
@@ -82,12 +79,15 @@ class BTCCoin(Coin):
 
     def base_derivation(self, purpose):
         if purpose is None or purpose == 'p2pkh':
-            purpose_path = "44"
+            return self.coin_derivation
         elif purpose == 'p2wpkh' or purpose == 'p2wsh':
-            purpose_path = "84"
+            if self.address_prefix == b'\0':
+                return "48'/0'/0'/2'"
+            elif self.address_prefix == b'\x6f':
+                return "48'/1'/0'/2'"
+            raise RuntimeError('invalid coin')
         else:
             raise RuntimeError('invalid purpose ' + purpose)
-        return self.coin_derivation % purpose_path
 
     def to_address(self, subkey, purpose):
         if purpose == 'p2wpkh':
@@ -105,6 +105,11 @@ class BTCCoin(Coin):
         subkey = next(master.subkeys(base_derivation))
         return subkey.as_text()
 
+    def xprv(self, master, purpose):
+        base_derivation = self.base_derivation(purpose)
+        subkey = next(master.subkeys(base_derivation))
+        return subkey.as_text(as_private=True)
+
 
 class ETHCoin(Coin):
     def to_address(self, subkey, _purpose):
@@ -118,6 +123,8 @@ class ETHCoin(Coin):
 
 class XRPCoin(Coin):
     def to_address(self, subkey, _purpose):
+        from .ripple import RippleBaseDecoder
+        ripple_decoder = RippleBaseDecoder()
         return ripple_decoder.encode(subkey.hash160())
 
     def to_private(self, exponent):
@@ -133,8 +140,8 @@ class CosmosCoin(Coin):
 
 
 coin_map = {
-    "btc": BTCCoin(b'\0', "%s'/0'/0'", "/0", "/1", bech_prefix='bc'),
-    "tbtc": BTCCoin(b'\x6f', "%s'/1'/0'", "/0", "/1", bech_prefix='tb'),
+    "btc": BTCCoin(b'\0', "44'/0'/0'", "/0", "/1", bech_prefix='bc'),
+    "tbtc": BTCCoin(b'\x6f', "44'/1'/0'", "/0", "/1", bech_prefix='tb'),
     "zcash": BTCCoin(b'\x1c\xb8', "%s'/1893'/0'", "/0", "/1", bech_prefix=None),
     "eth": ETHCoin(b'', "44'/60'/0'", "/0", None),
     "rop": ETHCoin(b'', "44'/1'/0'", "/0", None),
@@ -183,7 +190,7 @@ def main():
                                                  " Pass an empty string to not have a passphrase.", metavar="PASSPHRASE")
     parser.add_option("-r", "--show-private", default=False, action="store_true", help="show private keys")
     parser.add_option("-s", "--show-seed", default=False, action="store_true", help="show master seed")
-    parser.add_option("-x", "--show-xpub", default=False, action="store_true", help="show xpub")
+    parser.add_option("-x", "--show-xpub", default=False, action="store_true", help="show xpub and xprv if --show-private is on")
     parser.add_option("-c", "--coin", default="btc", help="use COIN, one of: " + coin_list, choices=coins)
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
@@ -237,6 +244,8 @@ def main():
 
     if options.show_xpub:
         print("xpub: %s" % coin.xpub(master, options.purpose))
+        if options.show_private:
+            print("xprv: %s" % coin.xprv(master, options.purpose))
 
     if coin.can_generate_addresses(options.purpose):
         for i in range(options.count):
