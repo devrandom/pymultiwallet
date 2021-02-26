@@ -142,7 +142,7 @@ class CosmosCoin(Coin):
 coin_map = {
     "btc": BTCCoin(b'\0', "44'/0'/0'", "/0", "/1", bech_prefix='bc'),
     "tbtc": BTCCoin(b'\x6f', "44'/1'/0'", "/0", "/1", bech_prefix='tb'),
-    "zcash": BTCCoin(b'\x1c\xb8', "%s'/1893'/0'", "/0", "/1", bech_prefix=None),
+    "zcash": BTCCoin(b'\x1c\xb8', "44'/1893'/0'", "/0", "/1", bech_prefix=None),
     "eth": ETHCoin(b'', "44'/60'/0'", "/0", None),
     "rop": ETHCoin(b'', "44'/1'/0'", "/0", None),
     "xrp": XRPCoin(b'', "44'/144'/0'", "/0", None),
