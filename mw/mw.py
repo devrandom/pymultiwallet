@@ -10,8 +10,9 @@ from optparse import OptionParser
 import sha3
 from mnemonic.mnemonic import Mnemonic
 from pycoin.contrib.segwit_addr import bech32_encode, convertbits
-from pycoin.encoding import b2a_hashed_base58, to_bytes_32
-from pycoin.key.BIP32Node import BIP32Node
+from pycoin.encoding.b58 import b2a_hashed_base58
+from pycoin.encoding.bytes32 import to_bytes_32
+from pycoin.symbols import btc, xtn
 
 # mw -p TREZOR 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 # > seed c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04
@@ -19,8 +20,8 @@ from pycoin.key.BIP32Node import BIP32Node
 # > master xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF
 # ku -s "44'/0'/0'/0/0" H:$SEED
 # > 1PEha8dk5Me5J1rZWpgqSt5F4BroTBLS5y
-VISUALIZATION_PATH = "9999'/9999'"
 
+VISUALIZATION_PATH = "9999'/9999'"
 
 
 class Coin(ABC):
@@ -114,7 +115,8 @@ class BTCCoin(Coin):
 class ETHCoin(Coin):
     def to_address(self, subkey, _purpose):
         hasher = sha3.keccak_256()
-        hasher.update(subkey.sec(True)[1:])
+        sec = subkey.sec(False)[1:]
+        hasher.update(sec)
         return hexlify(hasher.digest()[-20:]).decode()
 
     def to_private(self, exponent):
@@ -161,7 +163,12 @@ purpose_list = ', '.join(purposes)
 
 def mnemonic_to_master(mnemonic, passphrase, netcode='BTC'):
     seed = Mnemonic.to_seed(mnemonic, passphrase=passphrase)
-    master = BIP32Node.from_master_secret(seed, netcode)
+    if netcode == 'BTC':
+        master = btc.network.keys.bip32_seed(seed)
+    elif netcode == 'XTN':
+        master = xtn.network.keys.bip32_seed(seed)
+    else:
+        raise RuntimeError("unknown netcode")
     return seed, master
 
 
