@@ -23,7 +23,6 @@ setup(
         'pycoin==0.90.20201031',
         'mnemonic==0.18',
         'pysha3==1.0.2',
-        'pycryptodome==3.8.2',
         'hashprint==1.0.1',
     ],
     classifiers=[
