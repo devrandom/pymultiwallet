@@ -1,0 +1,3 @@
+pycoin # pycoin==0.90.20201031, but it installs as 0.0.0 for some reason
+mnemonic==0.18 # available in Ubuntu
+pysha3==1.0.2 # available in Ubuntu
