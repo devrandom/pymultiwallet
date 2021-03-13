@@ -20,10 +20,10 @@ setup(
     description="BIP-44 multi-coin wallet tool",
     test_suite='tests',
     install_requires=[
-        'pycoin==0.90.20201031',
-        'mnemonic==0.18',
-        'pysha3==1.0.2',
-        'hashprint==1.0.1',
+        'pycoin',
+        'mnemonic',
+        'pysha3',
+        # hashprint is an optional dependency, for --visual
     ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
