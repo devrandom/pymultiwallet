@@ -202,7 +202,7 @@ def main():
     parser.add_option("-n", "--count", default=20, type="int", help="print out N addresses", metavar="N")
     parser.add_option("-g", "--generate", default=False, action="store_true", help="generate a seed")
     parser.add_option("-e", "--entropy", default=False, action="store_true", help="type some entropy")
-    parser.add_option("-q", "--quiet", default=False, action="store_true", help="do not print visual seed")
+    parser.add_option("-v", "--visual", default=False, action="store_true", help="print visual seed")
     parser.add_option("-u", "--purpose", default=None, help="one of: " + purpose_list, choices=purposes)
     parser.add_option("-a", "--change", default=False, action="store_true", help="show change addresses")
 
@@ -237,7 +237,7 @@ def main():
         print(hexlify(seed))
         exit()
 
-    if not options.quiet:
+    if options.visual:
         visualization = visual(master)
         if sys.stdout.isatty():
             from .colorize import colorize
