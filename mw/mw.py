@@ -161,7 +161,11 @@ purposes = ['p2pkh', 'p2wpkh', 'p2wsh']
 purpose_list = ', '.join(purposes)
 
 
-def mnemonic_to_master(mnemonic, passphrase, netcode='BTC'):
+def mnemonic_to_master(mnemonic, passphrase, netcode='BTC', check=True):
+    if check:
+        if not Mnemonic('english').check(mnemonic):
+            raise RuntimeError('mnemonic is non-standard, please check spelling')
+
     seed = Mnemonic.to_seed(mnemonic, passphrase=passphrase)
     if netcode == 'BTC':
         master = btc.network.keys.bip32_seed(seed)
@@ -206,6 +210,7 @@ def main():
     parser.add_option("-u", "--purpose", default=None, help="one of: " + purpose_list, choices=purposes)
     parser.add_option("-a", "--change", default=False, action="store_true", help="show change addresses")
     parser.add_option("-q", "--quiet", default=False, action="store_true", help="be quiet")
+    parser.add_option("--allow-non-standard", default=False, action="store_true", help="allow non-standard mnemonic")
 
     (options, args) = parser.parse_args()
 
@@ -233,7 +238,7 @@ def main():
     if options.coin == 'tbtc':
         netcode = 'XTN'
 
-    (seed, master) = mnemonic_to_master(args[0], passphrase, netcode)
+    (seed, master) = mnemonic_to_master(args[0], passphrase, netcode, not options.allow_non_standard)
 
     if options.show_seed:
         print(hexlify(seed))
