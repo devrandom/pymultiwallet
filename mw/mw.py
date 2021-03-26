@@ -205,6 +205,7 @@ def main():
     parser.add_option("-v", "--visual", default=False, action="store_true", help="print visual seed")
     parser.add_option("-u", "--purpose", default=None, help="one of: " + purpose_list, choices=purposes)
     parser.add_option("-a", "--change", default=False, action="store_true", help="show change addresses")
+    parser.add_option("-q", "--quiet", default=False, action="store_true", help="be quiet")
 
     (options, args) = parser.parse_args()
 
@@ -214,9 +215,10 @@ def main():
 
     entropy = None
     if options.entropy:
-        sys.stdout.write("Enter entropy string followed by a \\n. ")
-        sys.stdout.write("No entropy is added, make sure you provide enough.\n")
-        sys.stdout.write(": ")
+        if not options.quiet:
+            sys.stdout.write("Enter entropy string followed by a \\n. ")
+            sys.stdout.write("No entropy is added, make sure you provide enough.\n")
+            sys.stdout.write(": ")
         entropy_string = input()
         entropy = hash_entropy(entropy_string)
     
@@ -247,12 +249,13 @@ def main():
 
     coin = coin_map[options.coin]
 
-    print("base derivation path: %s" % coin.base_derivation(options.purpose))
+    if not options.quiet:
+        print("base derivation path: %s" % coin.base_derivation(options.purpose))
 
     if options.show_xpub:
-        print("xpub: %s" % coin.xpub(master, options.purpose))
+        print(("%s" if options.quiet else "xpub: %s") % coin.xpub(master, options.purpose))
         if options.show_private:
-            print("xprv: %s" % coin.xprv(master, options.purpose))
+            print(("%s" if options.quiet else "xprv: %s") % coin.xprv(master, options.purpose))
 
     if coin.can_generate_addresses(options.purpose):
         for i in range(options.count):
